@@ -599,6 +599,21 @@ class ParanoiaTest < test_framework
     refute ParanoidModelWithBelong.unscoped.exists?(model.id)
   end
 
+  def test_has_one_really_destroy_with_non_paranoid
+    model = ParanoidModelWithHasOneWithNonParanoid.create
+    model.really_destroy!
+
+    refute ParanoidModelWithBelong.unscoped.exists?(model.id)
+  end
+
+  def test_has_one_really_destroy_with_new_record
+    model = ParanoidModelWithHasOne.create
+    model.build_paranoid_model_with_belong
+    model.really_destroy!
+
+    refute ParanoidModelWithBelong.unscoped.exists?(model.id)
+  end
+
   def test_has_one_really_destroy_with_record
     model = ParanoidModelWithHasOne.create { |record| record.build_paranoid_model_with_belong }
     model.really_destroy!
@@ -787,6 +802,13 @@ class ParanoidModelWithHasOne < ParanoidModel
   has_one :paranoid_model_with_belong, :dependent => :destroy
   has_one :class_name_belong, :dependent => :destroy, :class_name => "ParanoidModelWithAnthorClassNameBelong"
   has_one :paranoid_model_with_foreign_key_belong, :dependent => :destroy, :foreign_key => "has_one_foreign_key_id"
+end
+
+class ParanoidModelWithHasOneWithNonParanoid < ParanoidModel
+  has_one :paranoid_model_with_belong, :dependent => :destroy
+  has_one :class_name_belong, :dependent => :destroy, :class_name => "ParanoidModelWithAnthorClassNameBelong"
+  has_one :paranoid_model_with_foreign_key_belong, :dependent => :destroy, :foreign_key => "has_one_foreign_key_id"
+  has_one :non_paranoid_model, :dependent => :destroy
 end
 
 class ParanoidModelWithBelong < ActiveRecord::Base
