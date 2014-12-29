@@ -50,20 +50,6 @@ module Paranoia
     end
   end
 
-  module PreloaderAssociation
-    def self.included(base)
-      base.class_eval do
-        def build_scope_with_deleted
-          scope = build_scope_without_deleted
-          scope = scope.with_deleted if options[:with_deleted] && klass.respond_to?(:with_deleted)
-          scope
-        end
-
-        alias_method_chain :build_scope, :deleted
-      end
-    end
-  end
-
   module Query
     def paranoid? ; true ; end
 
@@ -295,5 +281,5 @@ class ActiveRecord::Base
 end
 
 ActiveRecord::Base.send :include, Paranoia::Association if ActiveRecord::VERSION::STRING >= "4.1"
-ActiveRecord::Associations::Preloader::Association.send :include, Paranoia::PreloaderAssociation if ActiveRecord::VERSION::STRING >= "4.1"
+
 require 'paranoia/rspec' if defined? RSpec
