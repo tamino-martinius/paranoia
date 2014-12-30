@@ -17,6 +17,7 @@ module Paranoia
     klazz.extend Callbacks
   end
 
+  # Adds with_deleted to belongs_to
   module Association
     def self.included(base)
       base.extend ClassMethods
@@ -32,6 +33,7 @@ module Paranoia
         result = belongs_to_without_deleted(target, scope, options)
 
         if with_deleted
+          result[target.to_s].options[:with_deleted] = with_deleted
           unless method_defined? "#{target}_with_unscoped"
             class_eval <<-RUBY, __FILE__, __LINE__
               def #{target}_with_unscoped(*args)
@@ -46,6 +48,21 @@ module Paranoia
         end
 
         result
+      end
+    end
+  end
+
+  # Loads associations correct with includes
+  module PreloaderAssociation
+    def self.included(base)
+      base.class_eval do
+        def build_scope_with_deleted
+          scope = build_scope_without_deleted
+          scope = scope.with_deleted if options[:with_deleted] && klass.respond_to?(:with_deleted)
+          scope
+        end
+
+        alias_method_chain :build_scope, :deleted
       end
     end
   end
