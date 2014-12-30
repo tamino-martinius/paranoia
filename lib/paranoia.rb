@@ -17,6 +17,20 @@ module Paranoia
     klazz.extend Callbacks
   end
 
+  module PreloaderAssociation
+    def self.included(base)
+      base.class_eval do
+        def build_scope_with_deleted
+          scope = build_scope_without_deleted
+          scope = scope.with_deleted if options[:with_deleted] && klass.respond_to?(:with_deleted)
+          scope
+        end
+
+        alias_method_chain :build_scope, :deleted
+      end
+    end
+  end
+
   module Association
     def self.included(base)
       base.extend ClassMethods
@@ -32,6 +46,7 @@ module Paranoia
         result = belongs_to_without_deleted(target, scope, options)
 
         if with_deleted
+          result[target].options[:with_deleted] = with_deleted
           unless method_defined? "#{target}_with_unscoped"
             class_eval <<-RUBY, __FILE__, __LINE__
               def #{target}_with_unscoped(*args)
@@ -281,5 +296,6 @@ class ActiveRecord::Base
 end
 
 ActiveRecord::Base.send :include, Paranoia::Association if ActiveRecord::VERSION::STRING >= "4.1"
+ActiveRecord::Associations::Preloader::Association.send :include, Paranoia::PreloaderAssociation if ActiveRecord::VERSION::STRING >= "4.1"
 
 require 'paranoia/rspec' if defined? RSpec
